@@ -1,3 +1,4 @@
+from typing import Any
 from pydantic import BaseModel, Field
 
 
@@ -122,7 +123,7 @@ class UploadResponse(BaseModel):
 
 
 class Error(BaseModel):
-    error: str
+    error: Any
 
 
 class DownloadSourceResponse(BaseModel):

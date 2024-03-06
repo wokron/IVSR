@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, UploadFile, Body, status
+from fastapi import APIRouter, UploadFile
 
 from app.reqs import mobsf_download_source_file, mobsf_upload_file, mobsf_scan_file
 from app.schemas.file import File
