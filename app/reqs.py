@@ -1,5 +1,6 @@
 import httpx
 from pydantic import FilePath
+from fastapi import HTTPException
 
 from app.config import get_settings
 from app.schemas.mobsf import (
@@ -21,7 +22,10 @@ async def mobsf_upload_file(file_name: str, file_data: bytes):
         )
 
     if resp.status_code != 200:
-        raise Exception(Error.model_validate_json(resp.content).error)
+        raise HTTPException(
+            status_code=resp.status_code,
+            detail=Error.model_validate_json(resp.content).error,
+        )
 
     return UploadResponse.model_validate_json(resp.content).hash
 
@@ -38,7 +42,10 @@ async def mobsf_scan_file(hash: str):
         )
 
     if resp.status_code != 200:
-        raise Exception(Error.model_validate_json(resp.content).error)
+        raise HTTPException(
+            status_code=resp.status_code,
+            detail=Error.model_validate_json(resp.content).error,
+        )
 
     return ScanResponse.model_validate_json(resp.content)
 
@@ -54,6 +61,9 @@ async def mobsf_download_source_file(hash: str, file: FilePath):
         )
 
     if resp.status_code != 200:
-        raise Exception(Error.model_validate_json(resp.content).error)
+        raise HTTPException(
+            status_code=resp.status_code,
+            detail=Error.model_validate_json(resp.content).error,
+        )
 
     return DownloadSourceResponse.model_validate_json(resp.content)
