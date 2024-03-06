@@ -292,7 +292,7 @@ class SecretResult(ResultBase):
         )
 
 
-class ScanResponse(BaseModel):
+class ScanResult(BaseModel):
     app_info: AppInfo
     app_comps: AppComps
 
@@ -306,8 +306,7 @@ class ScanResponse(BaseModel):
 
     @staticmethod
     def from_mobsf(resp: mobsf.ScanResponse):
-
-        return ScanResponse(
+        return ScanResult(
             app_info=AppInfo.from_mobsf(resp),
             app_comps=AppComps.from_mobsf(resp),
             cert_results=[

@@ -5,3 +5,7 @@ class File(BaseModel):
     file: str
     data: str
     type: str
+
+
+class UploadResult(BaseModel):
+    hash: str
