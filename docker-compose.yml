@@ -1,0 +1,24 @@
+version: '3'
+services:
+  mobsf:
+    build: ./mobsf
+    ports:
+      - "8001:8000"
+    environment:
+      - MOBSF_API_KEY=this-is-my-key
+    networks:
+      - android_security_net
+
+  backend:
+    build: .
+    ports:
+      - "8000:80"
+    environment:
+      - MOBSF_SECRET=this-is-my-key
+      - MOBSF_API_URL=http://mobsf:8000/api/v1
+    networks:
+      - android_security_net
+
+networks:
+  android_security_net:
+    driver: bridge
