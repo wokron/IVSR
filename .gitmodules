@@ -1,0 +1,3 @@
+[submodule "mobsf"]
+	path = mobsf
+	url = git@github.com:wokron/Mobile-Security-Framework-MobSF.git
