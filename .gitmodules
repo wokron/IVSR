@@ -1,3 +1,6 @@
 [submodule "mobsf"]
 	path = mobsf
 	url = git@github.com:wokron/Mobile-Security-Framework-MobSF.git
+[submodule "xmalplus"]
+	path = xmalplus
+	url = git@github.com:wokron/XmalPlus.git
