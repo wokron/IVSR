@@ -1,6 +1,6 @@
 from fastapi import APIRouter, UploadFile
 
-from app.reqs import mobsf_download_source_file, mobsf_upload_file, mobsf_scan_file
+from app.reqs import mobsf_download_source_file, mobsf_upload_apk, mobsf_scan_file
 from app.schemas.file import File, UploadResult
 from app.schemas.scan import ScanResult
 
@@ -9,7 +9,7 @@ api = APIRouter(prefix="/api")
 
 @api.post("/file", response_model=UploadResult)
 async def upload_file(file: UploadFile):
-    hash = await mobsf_upload_file(file.filename, file.file.read())
+    hash = await mobsf_upload_apk(file.filename, file.file.read())
     return {"hash": hash}
 
 
