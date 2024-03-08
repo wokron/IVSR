@@ -1,6 +1,11 @@
 from fastapi import APIRouter, UploadFile
+from app.ml import ml_classify_malware
 
-from app.reqs import mobsf_download_source_file, mobsf_upload_apk, mobsf_scan_file
+from app.reqs import (
+    mobsf_download_source_file,
+    mobsf_upload_apk,
+    mobsf_scan_file,
+)
 from app.schemas.file import File, UploadResult
 from app.schemas.scan import ScanResult
 
@@ -26,3 +31,9 @@ async def scan_file(
 async def view_source_file(hash: str, file_path: str):
     mobsf_resp = await mobsf_download_source_file(hash, file_path)
     return mobsf_resp
+
+
+@api.post("/scan/ml")
+async def scan_file_ml(file: UploadFile):
+    result = await ml_classify_malware(file.filename, file.file.read())
+    return result

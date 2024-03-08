@@ -16,7 +16,7 @@ async def mobsf_upload_apk(file_name: str, file_data: bytes):
 
     async with httpx.AsyncClient() as client:
         resp = await client.post(
-            str(settings.mobsf_url) + "/api/v1/upload",
+            str(settings.mobsf_url) + "api/v1/upload",
             headers={"Authorization": settings.mobsf_secret},
             files={"file": (file_name, file_data)},
         )
@@ -34,7 +34,7 @@ async def mobsf_download_apk(hash: str):
     settings = get_settings()
 
     async with httpx.AsyncClient() as client:
-        resp = await client.get(str(settings.mobsf_url) + f"/download/{hash}.apk")
+        resp = await client.get(str(settings.mobsf_url) + f"download/{hash}.apk")
 
     return resp.read()
 
@@ -44,7 +44,7 @@ async def mobsf_scan_file(hash: str):
 
     async with httpx.AsyncClient() as client:
         resp = await client.post(
-            str(settings.mobsf_url) + "/api/v1/scan",
+            str(settings.mobsf_url) + "api/v1/scan",
             headers={"Authorization": settings.mobsf_secret},
             data={"hash": hash},
             timeout=300,
@@ -64,7 +64,7 @@ async def mobsf_download_source_file(hash: str, file: FilePath):
 
     async with httpx.AsyncClient() as client:
         resp = await client.post(
-            str(settings.mobsf_url) + "/api/v1/view_source",
+            str(settings.mobsf_url) + "api/v1/view_source",
             headers={"Authorization": settings.mobsf_secret},
             data={"hash": hash, "file": file, "type": "apk"},
         )

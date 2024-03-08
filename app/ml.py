@@ -11,5 +11,5 @@ async def ml_classify_malware(
     with tempfile.TemporaryDirectory(suffix="IVSR_") as apk_dir:
         apk_dir = Path(apk_dir)
         with open(apk_dir / apk_name, "wb") as apkfile:
-            await asyncio.to_thread(apkfile.write(file_bytes))
-            return await asyncio.to_thread(get_xmal_model().run(apk_dir, apk_name))
+            await asyncio.to_thread(apkfile.write, file_bytes)
+            return await asyncio.to_thread(get_xmal_model().run, str(apk_dir), apk_name)

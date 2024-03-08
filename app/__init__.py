@@ -1,4 +1,4 @@
 from pathlib import Path
 import sys
 
-sys.path.append(Path(__file__).parent / "../xmalplus")
+sys.path.append(str(Path(__file__).parent / "../xmalplus"))
