@@ -1,3 +1,4 @@
+import json
 from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException, UploadFile
 from sqlmodel import Session
@@ -63,7 +64,7 @@ async def scan_file_ml(
             status_code=404, detail="fail to find app with the given hash value"
         )
     result = await ml_classify_malware(xmal_plus, app.name, app.data)
-    update_android_app_ml_report(sess, hash, str(result))
+    update_android_app_ml_report(sess, hash, json.dumps(result))
     return result
 
 

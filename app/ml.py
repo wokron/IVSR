@@ -3,6 +3,7 @@ from pathlib import Path
 import tempfile
 
 from functools import lru_cache
+from typing import Any
 from xmalplus import XmalPlus
 
 
@@ -13,7 +14,7 @@ def get_xmal_model():
 
 async def ml_classify_malware(
     xmal_plus: XmalPlus, apk_name: str, file_bytes: bytes
-) -> tuple[float, dict[str, str]]:
+) -> dict[str, Any]:
     with tempfile.TemporaryDirectory(suffix="IVSR_") as apk_dir:
         apk_dir = Path(apk_dir)
         with open(apk_dir / apk_name, "wb") as apkfile:
