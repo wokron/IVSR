@@ -15,7 +15,10 @@ services:
       - "8000:80"
     environment:
       - MOBSF_SECRET=this-is-my-key
-      - MOBSF_API_URL=http://mobsf:8000/api/v1
+      - MOBSF_URL=http://mobsf:8000
+      - QIANFAN_AK=${QIANFAN_AK}
+      - QIANFAN_SK=${QIANFAN_SK}
+      - SQLITE_URL=sqlite:///database.db
     networks:
       - android_security_net
 
