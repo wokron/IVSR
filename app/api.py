@@ -6,28 +6,29 @@ from app.config import Settings, get_settings
 from app.curd import (
     create_android_app,
     get_android_app,
+    list_android_apps,
     update_android_app,
 )
 from app.database import get_session
-from app.llm.chain import create_chain, generate_llm_report
+from app.llm.chain import create_chain, llm_generate_report
 from app.ml import get_xmal_model, ml_classify_malware
 from xmalplus import XmalPlus
-from app.models import AndroidAppCreate, AndroidAppUpdate
+from app.models import AndroidAppCreate, AndroidAppRead, AndroidAppUpdate
 
 from app.reqs import (
     mobsf_download_file,
     mobsf_download_source_file,
     mobsf_upload_apk,
-    mobsf_scan_file,
+    mobsf_scan_apk,
 )
-from app.schemas.file import File, UploadResult
-from app.schemas.scan import ScanResult
+from app.schemas.resp import StaticScanResult, MLScanResult, SourceFile
+
 
 router = APIRouter(prefix="/api")
 
 
-@router.post("/file", response_model=UploadResult)
-async def upload_file(
+@router.post("/apk", response_model=AndroidAppRead)
+async def upload_apk_file(
     settings: Annotated[Settings, Depends(get_settings)],
     sess: Annotated[Session, Depends(get_session)],
     file: UploadFile,
@@ -44,14 +45,19 @@ async def upload_file(
             status_code=status.HTTP_409_CONFLICT, detail="apk already exist"
         )
 
-    create_android_app(
+    db_app = create_android_app(
         sess, AndroidAppCreate(hash=hash, name=file.filename, data=file_data)
     )
-    return {"hash": hash}
+    return db_app
 
 
-@router.get("/scan/static", response_model=ScanResult)
-async def scan_file(
+@router.get("/apk", response_model=list[AndroidAppRead])
+async def list_apk_files(sess: Annotated[Session, Depends(get_session)]):
+    return list_android_apps(sess)
+
+
+@router.get("/scan/static", response_model=StaticScanResult)
+async def scan_apk_file(
     settings: Annotated[Settings, Depends(get_settings)],
     sess: Annotated[Session, Depends(get_session)],
     hash: str,
@@ -62,12 +68,12 @@ async def scan_file(
             status_code=404, detail="fail to find app with the given hash value"
         )
     if app.static_result == None:
-        mobsf_resp = await mobsf_scan_file(
+        mobsf_resp = await mobsf_scan_apk(
             settings.mobsf_url,
             settings.mobsf_secret,
             hash,
         )
-        resp = ScanResult.from_mobsf(mobsf_resp)
+        resp = StaticScanResult.from_mobsf(mobsf_resp)
         update_android_app(
             sess,
             hash,
@@ -78,11 +84,11 @@ async def scan_file(
         )
         return resp
     else:
-        return ScanResult.model_validate_json(app.static_result)
+        return StaticScanResult.model_validate_json(app.static_result)
 
 
-@router.get("/scan/learning")
-async def scan_file_ml(
+@router.get("/scan/ml", response_model=MLScanResult)
+async def scan_apk_file_ml(
     xmal_plus: Annotated[XmalPlus, Depends(get_xmal_model)],
     sess: Annotated[Session, Depends(get_session)],
     hash: str,
@@ -102,7 +108,7 @@ async def scan_file_ml(
         return json.loads(app.ml_result)
 
 
-@router.get("/file/{hash}/icon")
+@router.get("/apk/{hash}/icon")
 async def get_icon(
     settings: Annotated[Settings, Depends(get_settings)],
     sess: Annotated[Session, Depends(get_session)],
@@ -120,7 +126,7 @@ async def get_icon(
     return Response(content=file, media_type="image/png")
 
 
-@router.get("/file/{hash}/{file_path:path}", response_model=File)
+@router.get("/apk/{hash}/{file_path:path}", response_model=SourceFile)
 async def view_source_file(
     settings: Annotated[Settings, Depends(get_settings)],
     hash: str,
@@ -152,7 +158,7 @@ async def generate_report(
     if app.llm_report == None or regenerate:
         static_result = app.static_result if app.static_result != None else ""
         ml_result = app.ml_result if app.ml_result != None else ""
-        report = await generate_llm_report(chain, json.loads(static_result), ml_result)
+        report = await llm_generate_report(chain, json.loads(static_result), ml_result)
         update_android_app(sess, hash, AndroidAppUpdate(llm_report=report))
         return {"report": report}
     else:

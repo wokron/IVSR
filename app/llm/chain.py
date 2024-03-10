@@ -45,7 +45,7 @@ def create_chain():
     return report_chain
 
 
-async def generate_llm_report(
+async def llm_generate_report(
     chain: RunnableSerializable[Any, str],
     static_content: dict,
     ml_text: str,

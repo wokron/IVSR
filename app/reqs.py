@@ -40,7 +40,7 @@ async def mobsf_download_file(mobsf_url: AnyHttpUrl, filename):
     return resp.read()
 
 
-async def mobsf_scan_file(
+async def mobsf_scan_apk(
     mobsf_url: AnyHttpUrl,
     mobsf_secret: str,
     hash: str,

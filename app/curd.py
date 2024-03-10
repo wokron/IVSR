@@ -1,4 +1,4 @@
-from sqlmodel import Session
+from sqlmodel import Session, select
 from app.models import AndroidAppCreate, AndroidApp, AndroidAppUpdate
 
 
@@ -12,6 +12,10 @@ def create_android_app(sess: Session, app: AndroidAppCreate):
 
 def get_android_app(sess: Session, hash: str):
     return sess.get(AndroidApp, hash)
+
+
+def list_android_apps(sess: Session):
+    return sess.exec(select(AndroidApp)).all()
 
 
 def update_android_app(sess: Session, hash: str, app: AndroidAppUpdate):

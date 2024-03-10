@@ -292,7 +292,7 @@ class SecretResult(ResultBase):
         )
 
 
-class ScanResult(BaseModel):
+class StaticScanResult(BaseModel):
     app_info: AppInfo
     app_comps: AppComps
 
@@ -306,7 +306,7 @@ class ScanResult(BaseModel):
 
     @staticmethod
     def from_mobsf(resp: mobsf.ScanResponse):
-        return ScanResult(
+        return StaticScanResult(
             app_info=AppInfo.from_mobsf(resp),
             app_comps=AppComps.from_mobsf(resp),
             cert_results=[
@@ -335,3 +335,20 @@ class ScanResult(BaseModel):
                 else None
             ),
         )
+
+
+class MLScanFeature(BaseModel):
+    feature: str
+    associate_features: list[str]
+
+
+class MLScanResult(BaseModel):
+    apk_name: str
+    malware_score: float
+    key_features: list[MLScanFeature]
+
+
+class SourceFile(BaseModel):
+    file: str
+    data: str
+    type: str

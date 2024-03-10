@@ -25,3 +25,8 @@ class AndroidAppUpdate(SQLModel):
     static_result: Optional[str] = Field(None)
     ml_result: Optional[str] = Field(None)
     llm_report: Optional[str] = Field(None)
+
+
+class AndroidAppRead(SQLModel):
+    hash: str = Field(..., primary_key=True)
+    name: str
