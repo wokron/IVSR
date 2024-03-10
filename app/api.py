@@ -1,6 +1,6 @@
 import json
 from typing import Annotated, Any
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, status
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, status, Response
 from sqlmodel import Session
 from app.config import Settings, get_settings
 from app.curd import (
@@ -15,6 +15,7 @@ from xmalplus import XmalPlus
 from app.models import AndroidAppCreate, AndroidAppUpdate
 
 from app.reqs import (
+    mobsf_download_file,
     mobsf_download_source_file,
     mobsf_upload_apk,
     mobsf_scan_file,
@@ -39,8 +40,10 @@ async def upload_file(
         file_data,
     )
     if get_android_app(sess, hash) != None:
-        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="apk already exist")
-    
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT, detail="apk already exist"
+        )
+
     create_android_app(
         sess, AndroidAppCreate(hash=hash, name=file.filename, data=file_data)
     )
@@ -66,7 +69,12 @@ async def scan_file(
         )
         resp = ScanResult.from_mobsf(mobsf_resp)
         update_android_app(
-            sess, hash, AndroidAppUpdate(static_result=resp.model_dump_json())
+            sess,
+            hash,
+            AndroidAppUpdate(
+                static_result=resp.model_dump_json(),
+                icon_path=mobsf_resp.icon_path,
+            ),
         )
         return resp
     else:
@@ -94,7 +102,25 @@ async def scan_file_ml(
         return json.loads(app.ml_result)
 
 
-@router.get("/source/{hash}/{file_path:path}", response_model=File)
+@router.get("/file/{hash}/icon")
+async def get_icon(
+    settings: Annotated[Settings, Depends(get_settings)],
+    sess: Annotated[Session, Depends(get_session)],
+    hash: str,
+):
+    app = get_android_app(sess, hash)
+    if app == None:
+        raise HTTPException(
+            status_code=404, detail="fail to find app with the given hash value"
+        )
+    if app.icon_path == None:
+        raise HTTPException(status_code=404, detail="icon not exist")
+
+    file = await mobsf_download_file(settings.mobsf_url, app.icon_path)
+    return Response(content=file, media_type="image/png")
+
+
+@router.get("/file/{hash}/{file_path:path}", response_model=File)
 async def view_source_file(
     settings: Annotated[Settings, Depends(get_settings)],
     hash: str,

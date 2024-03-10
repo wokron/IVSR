@@ -33,9 +33,9 @@ async def mobsf_upload_apk(
     return UploadResponse.model_validate_json(resp.content).hash
 
 
-async def mobsf_download_apk(mobsf_url: AnyHttpUrl, hash: str):
+async def mobsf_download_file(mobsf_url: AnyHttpUrl, filename):
     async with httpx.AsyncClient() as client:
-        resp = await client.get(str(mobsf_url) + f"download/{hash}.apk")
+        resp = await client.get(str(mobsf_url) + f"download/{filename}")
 
     return resp.read()
 

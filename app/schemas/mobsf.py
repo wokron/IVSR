@@ -98,6 +98,7 @@ class ScanResponse(BaseModel):
     size: str
     package_name: str
     main_activity: str
+    icon_path: str
 
     activities: list[str]
     receivers: list[str]
