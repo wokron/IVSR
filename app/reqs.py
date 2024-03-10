@@ -2,7 +2,6 @@ import httpx
 from pydantic import AnyHttpUrl, FilePath
 from fastapi import HTTPException
 
-from app.config import get_settings
 from app.schemas.mobsf import (
     DownloadSourceResponse,
     ScanResponse,

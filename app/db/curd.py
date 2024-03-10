@@ -1,5 +1,5 @@
 from sqlmodel import Session, select
-from app.models import AndroidAppCreate, AndroidApp, AndroidAppUpdate
+from app.db.models import AndroidAppCreate, AndroidApp, AndroidAppUpdate
 
 
 def create_android_app(sess: Session, app: AndroidAppCreate):

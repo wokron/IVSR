@@ -1,7 +1,7 @@
 from sqlmodel import SQLModel, Session, create_engine
 
 from app.config import get_settings
-from app import models  # don't move this
+from app.db import models  # don't move this
 
 
 engine = create_engine(str(get_settings().sqlite_url))

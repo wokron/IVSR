@@ -3,17 +3,17 @@ from typing import Annotated, Any
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, status, Response
 from sqlmodel import Session
 from app.config import Settings, get_settings
-from app.curd import (
+from app.db.curd import (
     create_android_app,
     get_android_app,
     list_android_apps,
     update_android_app,
 )
-from app.database import get_session
+from app.db.database import get_session
 from app.llm.chain import create_chain, llm_generate_report
 from app.ml import get_xmal_model, ml_classify_malware
 from xmalplus import XmalPlus
-from app.models import AndroidAppCreate, AndroidAppRead, AndroidAppUpdate
+from app.db.models import AndroidAppCreate, AndroidAppRead, AndroidAppUpdate
 
 from app.reqs import (
     mobsf_download_file,
@@ -27,7 +27,7 @@ from app.schemas.resp import StaticScanResult, MLScanResult, SourceFile
 router = APIRouter(prefix="/api")
 
 
-@router.post("/apk", response_model=AndroidAppRead)
+@router.post("/file", response_model=AndroidAppRead)
 async def upload_apk_file(
     settings: Annotated[Settings, Depends(get_settings)],
     sess: Annotated[Session, Depends(get_session)],
@@ -51,9 +51,42 @@ async def upload_apk_file(
     return db_app
 
 
-@router.get("/apk", response_model=list[AndroidAppRead])
+@router.get("/file", response_model=list[AndroidAppRead])
 async def list_apk_files(sess: Annotated[Session, Depends(get_session)]):
     return list_android_apps(sess)
+
+
+@router.get("/file/{hash}/icon")
+async def get_icon(
+    settings: Annotated[Settings, Depends(get_settings)],
+    sess: Annotated[Session, Depends(get_session)],
+    hash: str,
+):
+    app = get_android_app(sess, hash)
+    if app == None:
+        raise HTTPException(
+            status_code=404, detail="fail to find app with the given hash value"
+        )
+    if app.icon_path == None:
+        raise HTTPException(status_code=404, detail="icon not exist")
+
+    file = await mobsf_download_file(settings.mobsf_url, app.icon_path)
+    return Response(content=file, media_type="image/png")
+
+
+@router.get("/file/{hash}/{file_path:path}", response_model=SourceFile)
+async def view_source_file(
+    settings: Annotated[Settings, Depends(get_settings)],
+    hash: str,
+    file_path: str,
+):
+    mobsf_resp = await mobsf_download_source_file(
+        settings.mobsf_url,
+        settings.mobsf_secret,
+        hash,
+        file_path,
+    )
+    return mobsf_resp
 
 
 @router.get("/scan/static", response_model=StaticScanResult)
@@ -106,39 +139,6 @@ async def scan_apk_file_ml(
         return ml_result
     else:
         return json.loads(app.ml_result)
-
-
-@router.get("/apk/{hash}/icon")
-async def get_icon(
-    settings: Annotated[Settings, Depends(get_settings)],
-    sess: Annotated[Session, Depends(get_session)],
-    hash: str,
-):
-    app = get_android_app(sess, hash)
-    if app == None:
-        raise HTTPException(
-            status_code=404, detail="fail to find app with the given hash value"
-        )
-    if app.icon_path == None:
-        raise HTTPException(status_code=404, detail="icon not exist")
-
-    file = await mobsf_download_file(settings.mobsf_url, app.icon_path)
-    return Response(content=file, media_type="image/png")
-
-
-@router.get("/apk/{hash}/{file_path:path}", response_model=SourceFile)
-async def view_source_file(
-    settings: Annotated[Settings, Depends(get_settings)],
-    hash: str,
-    file_path: str,
-):
-    mobsf_resp = await mobsf_download_source_file(
-        settings.mobsf_url,
-        settings.mobsf_secret,
-        hash,
-        file_path,
-    )
-    return mobsf_resp
 
 
 @router.get("/report")
