@@ -22,7 +22,7 @@ from app.reqs import (
     mobsf_upload_apk,
     mobsf_scan_apk,
 )
-from app.schemas.resp import StaticScanResult, MLScanResult, SourceFile
+from app.schemas.resp import StaticScanResult, MLScanResult, TextFile
 
 
 router = APIRouter(prefix="/api")
@@ -69,7 +69,7 @@ async def get_icon(
     return Response(content=file, media_type="image/png")
 
 
-@router.get("/file/{hash}/{file_path:path}", response_model=SourceFile)
+@router.get("/file/{hash}/{file_path:path}", response_model=TextFile)
 async def view_source_file(
     settings: Annotated[Settings, Depends(get_settings)],
     hash: str,
@@ -126,7 +126,7 @@ async def scan_apk_file_ml(
         return json.loads(app.ml_result)
 
 
-@router.get("/report")
+@router.get("/report", response_model=TextFile)
 async def generate_report(
     *,
     sess: Annotated[Session, Depends(get_session)],
@@ -139,6 +139,6 @@ async def generate_report(
         ml_result = app.ml_result if app.ml_result != None else ""
         report = await llm_generate_report(chain, json.loads(static_result), ml_result)
         update_android_app(sess, app.hash, AndroidAppUpdate(llm_report=report))
-        return {"report": report}
+        return TextFile(file="Report.md", data=report, type="md")
     else:
-        return {"report": app.llm_report}
+        return TextFile(file="Report.md", data=app.llm_report, type="md")

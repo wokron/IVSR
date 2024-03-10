@@ -348,7 +348,7 @@ class MLScanResult(BaseModel):
     key_features: list[MLScanFeature]
 
 
-class SourceFile(BaseModel):
+class TextFile(BaseModel):
     file: str
     data: str
     type: str
