@@ -1,6 +1,6 @@
 from functools import lru_cache
 from pydantic_settings import BaseSettings, SettingsConfigDict
-from pydantic import AnyHttpUrl
+from pydantic import AnyHttpUrl, AnyUrl
 
 
 class Settings(BaseSettings):
@@ -9,6 +9,8 @@ class Settings(BaseSettings):
 
     qianfan_ak: str
     qianfan_sk: str
+
+    sqlite_url: AnyUrl
 
     model_config = SettingsConfigDict(env_file=".env")
 
