@@ -15,3 +15,9 @@ class AndroidApp(SQLModel, table=True):
     static_result: Optional[str] = Field(None)
     ml_result: Optional[str] = Field(None)
     llm_report: Optional[str] = Field(None)
+
+
+class AndroidAppUpdate(SQLModel):
+    static_result: Optional[str] = Field(None)
+    ml_result: Optional[str] = Field(None)
+    llm_report: Optional[str] = Field(None)

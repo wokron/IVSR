@@ -6,15 +6,16 @@ from app.config import Settings, get_settings
 from app.curd import (
     create_android_app,
     get_android_app,
-    update_android_app_llm_report,
-    update_android_app_ml_report,
-    update_android_app_static_report,
+    update_android_app,
+    # update_android_app_llm_report,
+    # update_android_app_ml_report,
+    # update_android_app_static_report,
 )
 from app.database import get_session
 from app.llm.chain import create_chain, generate_llm_report
 from app.ml import get_xmal_model, ml_classify_malware
 from xmalplus import XmalPlus
-from app.models import AndroidAppCreate
+from app.models import AndroidAppCreate, AndroidAppUpdate
 
 from app.reqs import (
     mobsf_download_source_file,
@@ -63,7 +64,9 @@ async def scan_file(
             hash,
         )
         resp = ScanResult.from_mobsf(mobsf_resp)
-        update_android_app_static_report(sess, hash, resp.model_dump_json())
+        update_android_app(
+            sess, hash, AndroidAppUpdate(static_result=resp.model_dump_json())
+        )
         return resp
     else:
         return ScanResult.model_validate_json(app.static_result)
@@ -82,7 +85,9 @@ async def scan_file_ml(
         )
     if app.ml_result == None:
         ml_result = await ml_classify_malware(xmal_plus, app.name, app.data)
-        update_android_app_ml_report(sess, hash, json.dumps(ml_result))
+        update_android_app(
+            sess, hash, AndroidAppUpdate(ml_result=json.dumps(ml_result))
+        )
         return ml_result
     else:
         return json.loads(app.ml_result)
@@ -105,10 +110,11 @@ async def view_source_file(
 
 @api.get("/report")
 async def generate_report(
+    *,
     sess: Annotated[Session, Depends(get_session)],
     chain: Annotated[Any, Depends(create_chain)],
     hash: str,
-    regenerate: Annotated[bool, Query(False)],
+    regenerate: bool = False,
 ):
     app = get_android_app(sess, hash)
     if app == None:
@@ -118,7 +124,7 @@ async def generate_report(
 
     if app.llm_report == None or regenerate:
         report = await generate_llm_report(chain, app.static_result, app.ml_result)
-        update_android_app_llm_report(sess, hash, report)
+        update_android_app(sess, hash, AndroidAppUpdate(llm_report=report))
         return {"report": report}
     else:
         return {"report": app.llm_report}
