@@ -28,4 +28,4 @@ def test_android_app_curd():
         assert app1.model_dump() == app2.model_dump()
 
         app3 = update_android_app_ml_report(sess, "1234", "this is report")
-        assert app3.ml_report != None
+        assert app3.ml_result != None
