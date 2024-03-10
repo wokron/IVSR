@@ -10,10 +10,11 @@ from app.db.curd import (
     update_android_app,
 )
 from app.db.database import get_session
+from app.depends import get_android_app_by_hash
 from app.llm.chain import create_chain, llm_generate_report
 from app.ml import get_xmal_model, ml_classify_malware
 from xmalplus import XmalPlus
-from app.db.models import AndroidAppCreate, AndroidAppRead, AndroidAppUpdate
+from app.db.models import AndroidApp, AndroidAppCreate, AndroidAppRead, AndroidAppUpdate
 
 from app.reqs import (
     mobsf_download_file,
@@ -59,14 +60,8 @@ async def list_apk_files(sess: Annotated[Session, Depends(get_session)]):
 @router.get("/file/{hash}/icon")
 async def get_icon(
     settings: Annotated[Settings, Depends(get_settings)],
-    sess: Annotated[Session, Depends(get_session)],
-    hash: str,
+    app: Annotated[AndroidApp, Depends(get_android_app_by_hash)],
 ):
-    app = get_android_app(sess, hash)
-    if app == None:
-        raise HTTPException(
-            status_code=404, detail="fail to find app with the given hash value"
-        )
     if app.icon_path == None:
         raise HTTPException(status_code=404, detail="icon not exist")
 
@@ -93,23 +88,18 @@ async def view_source_file(
 async def scan_apk_file(
     settings: Annotated[Settings, Depends(get_settings)],
     sess: Annotated[Session, Depends(get_session)],
-    hash: str,
+    app: Annotated[AndroidApp, Depends(get_android_app_by_hash)],
 ):
-    app = get_android_app(sess, hash)
-    if app == None:
-        raise HTTPException(
-            status_code=404, detail="fail to find app with the given hash value"
-        )
     if app.static_result == None:
         mobsf_resp = await mobsf_scan_apk(
             settings.mobsf_url,
             settings.mobsf_secret,
-            hash,
+            app.hash,
         )
         resp = StaticScanResult.from_mobsf(mobsf_resp)
         update_android_app(
             sess,
-            hash,
+            app.hash,
             AndroidAppUpdate(
                 static_result=resp.model_dump_json(),
                 icon_path=mobsf_resp.icon_path,
@@ -124,17 +114,12 @@ async def scan_apk_file(
 async def scan_apk_file_ml(
     xmal_plus: Annotated[XmalPlus, Depends(get_xmal_model)],
     sess: Annotated[Session, Depends(get_session)],
-    hash: str,
+    app: Annotated[AndroidApp, Depends(get_android_app_by_hash)],
 ):
-    app = get_android_app(sess, hash)
-    if app == None:
-        raise HTTPException(
-            status_code=404, detail="fail to find app with the given hash value"
-        )
     if app.ml_result == None:
         ml_result = await ml_classify_malware(xmal_plus, app.name, app.data)
         update_android_app(
-            sess, hash, AndroidAppUpdate(ml_result=json.dumps(ml_result))
+            sess, app.hash, AndroidAppUpdate(ml_result=json.dumps(ml_result))
         )
         return ml_result
     else:
@@ -146,20 +131,14 @@ async def generate_report(
     *,
     sess: Annotated[Session, Depends(get_session)],
     chain: Annotated[Any, Depends(create_chain)],
-    hash: str,
+    app: Annotated[AndroidApp, Depends(get_android_app_by_hash)],
     regenerate: bool = False,
 ):
-    app = get_android_app(sess, hash)
-    if app == None:
-        raise HTTPException(
-            status_code=404, detail="fail to find app with the given hash value"
-        )
-
     if app.llm_report == None or regenerate:
         static_result = app.static_result if app.static_result != None else ""
         ml_result = app.ml_result if app.ml_result != None else ""
         report = await llm_generate_report(chain, json.loads(static_result), ml_result)
-        update_android_app(sess, hash, AndroidAppUpdate(llm_report=report))
+        update_android_app(sess, app.hash, AndroidAppUpdate(llm_report=report))
         return {"report": report}
     else:
         return {"report": app.llm_report}
