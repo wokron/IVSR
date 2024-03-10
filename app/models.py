@@ -1,21 +1,15 @@
-from typing import List, Optional
-
-from sqlmodel import Field, Relationship, SQLModel
-
-
-class Team(SQLModel, table=True):
-    id: Optional[int] = Field(default=None, primary_key=True)
-    name: str = Field(index=True)
-    headquarters: str
-
-    heroes: List["Hero"] = Relationship(back_populates="team")
+from typing import Optional
+from sqlmodel import Field, SQLModel
 
 
-class Hero(SQLModel, table=True):
-    id: Optional[int] = Field(default=None, primary_key=True)
-    name: str = Field(index=True)
-    secret_name: str
-    age: Optional[int] = Field(default=None, index=True)
+class AndroidAppCreate(SQLModel):
+    hash: str = Field(..., primary_key=True)
+    name: str
+    data: bytes
 
-    team_id: Optional[int] = Field(default=None, foreign_key="team.id")
-    team: Optional[Team] = Relationship(back_populates="heroes")
+
+class AndroidApp(SQLModel, table=True):
+    hash: str = Field(..., primary_key=True)
+    name: str
+    data: bytes
+    ml_report: Optional[str] = Field(None)
