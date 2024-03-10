@@ -1,15 +1,12 @@
 import json
 from typing import Annotated, Any
-from fastapi import APIRouter, Depends, HTTPException, Query, UploadFile
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, status
 from sqlmodel import Session
 from app.config import Settings, get_settings
 from app.curd import (
     create_android_app,
     get_android_app,
     update_android_app,
-    # update_android_app_llm_report,
-    # update_android_app_ml_report,
-    # update_android_app_static_report,
 )
 from app.database import get_session
 from app.llm.chain import create_chain, generate_llm_report
@@ -34,14 +31,18 @@ async def upload_file(
     sess: Annotated[Session, Depends(get_session)],
     file: UploadFile,
 ):
+    file_data = file.file.read()
     hash = await mobsf_upload_apk(
         settings.mobsf_url,
         settings.mobsf_secret,
         file.filename,
-        file.file.read(),
+        file_data,
     )
+    if get_android_app(sess, hash) != None:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="apk already exist")
+    
     create_android_app(
-        sess, AndroidAppCreate(hash=hash, name=file.filename, data=file.file.read())
+        sess, AndroidAppCreate(hash=hash, name=file.filename, data=file_data)
     )
     return {"hash": hash}
 
@@ -123,7 +124,9 @@ async def generate_report(
         )
 
     if app.llm_report == None or regenerate:
-        report = await generate_llm_report(chain, app.static_result, app.ml_result)
+        static_result = app.static_result if app.static_result != None else ""
+        ml_result = app.ml_result if app.ml_result != None else ""
+        report = await generate_llm_report(chain, json.loads(static_result), ml_result)
         update_android_app(sess, hash, AndroidAppUpdate(llm_report=report))
         return {"report": report}
     else:

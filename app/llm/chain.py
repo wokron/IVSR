@@ -1,12 +1,11 @@
 from functools import lru_cache
-from typing import Annotated, Any
-from fastapi import Depends
+from typing import Any
 from langchain_community.llms.baidu_qianfan_endpoint import QianfanLLMEndpoint
 from langchain.chains.summarize import load_summarize_chain
 from langchain_core.runnables import RunnablePick, RunnableSerializable
 from langchain_core.output_parsers import StrOutputParser
 from langchain_text_splitters import RecursiveJsonSplitter
-from app.config import Settings, get_settings
+from app.config import get_settings
 
 from app.llm.prompts import (
     ML_PROMPT,
@@ -17,11 +16,13 @@ from app.llm.prompts import (
 
 
 @lru_cache
-def create_chain(config: Annotated[Settings, Depends(get_settings)]):
+def create_chain():
+    settings = get_settings()
+
     llm = QianfanLLMEndpoint(
         model="Llama-2-13b-chat",
-        qianfan_ak=config.qianfan_ak,
-        qianfan_sk=config.qianfan_sk,
+        qianfan_ak=settings.qianfan_ak,
+        qianfan_sk=settings.qianfan_sk,
     )
 
     static_summary_chain = load_summarize_chain(
@@ -46,7 +47,7 @@ def create_chain(config: Annotated[Settings, Depends(get_settings)]):
 
 async def generate_llm_report(
     chain: RunnableSerializable[Any, str],
-    static_content: str,
+    static_content: dict,
     ml_text: str,
 ):
     static_docs = RecursiveJsonSplitter().create_documents(
