@@ -7,6 +7,9 @@ class Settings(BaseSettings):
     mobsf_secret: str
     mobsf_url: AnyHttpUrl
 
+    qianfan_ak: str
+    qianfan_sk: str
+
     model_config = SettingsConfigDict(env_file=".env")
 
 
