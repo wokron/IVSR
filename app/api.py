@@ -1,7 +1,8 @@
 from typing import Annotated
 from fastapi import APIRouter, Depends, UploadFile
 from app.config import Settings, get_settings
-from app.ml import ml_classify_malware
+from app.ml import get_xmal_model, ml_classify_malware
+from xmalplus import XmalPlus
 
 from app.reqs import (
     mobsf_download_source_file,
@@ -59,7 +60,8 @@ async def view_source_file(
 
 @api.post("/scan/ml")
 async def scan_file_ml(
+    xmal_plus: Annotated[XmalPlus, Depends(get_xmal_model)],
     file: UploadFile,
 ):
-    result = await ml_classify_malware(file.filename, file.file.read())
+    result = await ml_classify_malware(xmal_plus, file.filename, file.file.read())
     return result
