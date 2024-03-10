@@ -22,10 +22,10 @@ from app.reqs import (
 from app.schemas.file import File, UploadResult
 from app.schemas.scan import ScanResult
 
-api = APIRouter(prefix="/api")
+router = APIRouter(prefix="/api")
 
 
-@api.post("/file", response_model=UploadResult)
+@router.post("/file", response_model=UploadResult)
 async def upload_file(
     settings: Annotated[Settings, Depends(get_settings)],
     sess: Annotated[Session, Depends(get_session)],
@@ -47,7 +47,7 @@ async def upload_file(
     return {"hash": hash}
 
 
-@api.get("/scan/static", response_model=ScanResult)
+@router.get("/scan/static", response_model=ScanResult)
 async def scan_file(
     settings: Annotated[Settings, Depends(get_settings)],
     sess: Annotated[Session, Depends(get_session)],
@@ -73,7 +73,7 @@ async def scan_file(
         return ScanResult.model_validate_json(app.static_result)
 
 
-@api.get("/scan/learning")
+@router.get("/scan/learning")
 async def scan_file_ml(
     xmal_plus: Annotated[XmalPlus, Depends(get_xmal_model)],
     sess: Annotated[Session, Depends(get_session)],
@@ -94,7 +94,7 @@ async def scan_file_ml(
         return json.loads(app.ml_result)
 
 
-@api.get("/source/{hash}/{file_path:path}", response_model=File)
+@router.get("/source/{hash}/{file_path:path}", response_model=File)
 async def view_source_file(
     settings: Annotated[Settings, Depends(get_settings)],
     hash: str,
@@ -109,7 +109,7 @@ async def view_source_file(
     return mobsf_resp
 
 
-@api.get("/report")
+@router.get("/report")
 async def generate_report(
     *,
     sess: Annotated[Session, Depends(get_session)],
