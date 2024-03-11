@@ -22,7 +22,12 @@ from app.reqs import (
     mobsf_upload_apk,
     mobsf_scan_apk,
 )
-from app.schemas.resp import StaticScanResult, MLScanResult, StaticScanResultSimple, TextFile
+from app.schemas.resp import (
+    StaticScanResult,
+    MLScanResult,
+    StaticScanResultSimple,
+    TextFile,
+)
 
 
 router = APIRouter(prefix="/api")
@@ -41,14 +46,13 @@ async def upload_apk_file(
         file.filename,
         file_data,
     )
-    if get_android_app(sess, hash) != None:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT, detail="apk already exist"
+
+    db_app = get_android_app(sess, hash)
+    if db_app == None:
+        db_app = create_android_app(
+            sess, AndroidAppCreate(hash=hash, name=file.filename, data=file_data)
         )
 
-    db_app = create_android_app(
-        sess, AndroidAppCreate(hash=hash, name=file.filename, data=file_data)
-    )
     return db_app
 
 
@@ -137,7 +141,11 @@ async def generate_report(
     if app.llm_report == None or regenerate:
         static_result = app.static_result if app.static_result != None else ""
         ml_result = app.ml_result if app.ml_result != None else ""
-        report = await llm_generate_report(chain, StaticScanResultSimple.model_validate_json(static_result).model_dump(), ml_result)
+        report = await llm_generate_report(
+            chain,
+            StaticScanResultSimple.model_validate_json(static_result).model_dump(),
+            ml_result,
+        )
         update_android_app(sess, app.hash, AndroidAppUpdate(llm_report=report))
         return TextFile(file="Report.md", data=report, type="md")
     else:
