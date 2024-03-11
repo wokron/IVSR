@@ -7,7 +7,7 @@ class AppInfo(BaseModel):
     app_name: str
     package_name: str
     size: str
-    package_name: str
+    file_name: str
     cert_info: str
 
     @staticmethod
@@ -16,6 +16,7 @@ class AppInfo(BaseModel):
             app_name=resp.app_name,
             package_name=resp.package_name,
             size=resp.size,
+            file_name=resp.file_name,
             cert_info=resp.certificate_analysis.certificate_info,
         )
 
@@ -352,3 +353,83 @@ class TextFile(BaseModel):
     file: str
     data: str
     type: str
+
+
+class AppInfoSimple(BaseModel):
+    app_name: str
+    package_name: str
+    file_name: str
+
+
+class CertResultSimple(ResultBase):
+    pass
+
+
+class MalwarePermsStatSimple(BaseModel):
+    top_malware_perms: list[str]
+    other_abused_perms: list[str]
+    total_malware_perms: int
+    total_other_perms: int
+
+
+class PermResultsSimple(BaseModel):
+    malware_perms_stat: MalwarePermsStatSimple
+
+
+class ManifestResultSimple(ResultBase):
+    pass
+
+
+class NetworkResultSimple(ResultBase):
+    pass
+
+
+class NXResultSimple(ResultBase):
+    is_nx: bool
+
+
+class HasCanaryResultSimple(ResultBase):
+    has_canary: bool
+
+
+class RELROResultSimple(ResultBase):
+    relro: str | None
+
+
+class RPathResultSimple(ResultBase):
+    rpath: str | None
+
+
+class RunPathResultSimple(ResultBase):
+    runpath: str | None
+
+
+class IsFortifiedResultSimple(ResultBase):
+    is_fortified: bool
+
+
+class IsStrippedResultSimple(ResultBase):
+    is_stripped: bool
+
+
+class BinaryResultsSimple(BaseModel):
+    name: str
+
+
+class CodeResultSimple(ResultBase):
+    pass
+
+
+class SecretResultSimple(ResultBase):
+    pass
+
+
+class StaticScanResultSimple(BaseModel):
+    app_info: AppInfoSimple
+    cert_results: list[CertResultSimple]
+    prem_results: PermResultsSimple
+    manifest_results: list[ManifestResultSimple]
+    network_results: list[NetworkResultSimple]
+    binary_results: list[BinaryResultsSimple]
+    code_results: list[CodeResultSimple]
+    secrets_results: SecretResultSimple | None = Field(None)

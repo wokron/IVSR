@@ -22,7 +22,7 @@ from app.reqs import (
     mobsf_upload_apk,
     mobsf_scan_apk,
 )
-from app.schemas.resp import StaticScanResult, MLScanResult, TextFile
+from app.schemas.resp import StaticScanResult, MLScanResult, StaticScanResultSimple, TextFile
 
 
 router = APIRouter(prefix="/api")
@@ -137,7 +137,7 @@ async def generate_report(
     if app.llm_report == None or regenerate:
         static_result = app.static_result if app.static_result != None else ""
         ml_result = app.ml_result if app.ml_result != None else ""
-        report = await llm_generate_report(chain, json.loads(static_result), ml_result)
+        report = await llm_generate_report(chain, StaticScanResultSimple.model_validate_json(static_result).model_dump(), ml_result)
         update_android_app(sess, app.hash, AndroidAppUpdate(llm_report=report))
         return TextFile(file="Report.md", data=report, type="md")
     else:

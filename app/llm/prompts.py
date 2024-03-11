@@ -54,7 +54,7 @@ Your job is to produce a analysis report based on the following content:
 The analysis report should be in markdown format, and include as much information as possible.
 The report should have these sections:
 1. introduction (keep it simple)
-2. reports of different parts of analysis (at least three parts here, exclude conclusion and recommendations)
+2. reports of different parts of analysis (three to five parts here, exclude conclusion and recommendations)
 3. conclusion
 4. recommendations
 
@@ -80,6 +80,7 @@ Recommendations
 ---------------
 ...
 
+(ATTENTION PLEASE, since this report is formal, you shouldn't answer me with something like "Sure, I can answer your question". You should only answer me with the content of your report.)
 ANALYSIS REPORT:\
 """
 REPORT_PROMPT = PromptTemplate.from_template(REPORT_PROMPT_TEMPLATE)
