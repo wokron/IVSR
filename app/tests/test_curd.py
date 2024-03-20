@@ -1,7 +1,7 @@
 from sqlmodel import SQLModel, Session, create_engine
 
-from app import models
-from app.curd import create_android_app, get_android_app, update_android_app_ml_report
+from app.db import models
+from app.db.curd import create_android_app, get_android_app, update_android_app
 
 
 def test_android_app_curd():
@@ -21,11 +21,16 @@ def test_android_app_curd():
             "hash": "1234",
             "name": "Android App1",
             "data": bytes("some data", "utf-8"),
-            "ml_report": None,
+            "icon_path": None,
+            "static_result": None,
+            "ml_result": None,
+            "llm_report": None,
         }
 
         app2 = get_android_app(sess, "1234")
         assert app1.model_dump() == app2.model_dump()
 
-        app3 = update_android_app_ml_report(sess, "1234", "this is report")
+        app3 = update_android_app(
+            sess, "1234", models.AndroidAppUpdate(ml_result="this is report")
+        )
         assert app3.ml_result != None

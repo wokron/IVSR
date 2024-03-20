@@ -5,6 +5,7 @@ json_data = """
     "size": "250TB",
     "package_name": "balabala",
     "main_activity": "balabala.MainActivity",
+    "icon_path": "/some/path",
     "exported_activities": "['balabala.XActivity']",
     "activities": [
         "balabala.MainActivity"
@@ -150,6 +151,21 @@ json_data = """
         "android.permission.QUERY_ALL_PACKAGES": {
             "123.java": "7,211",
             "com/dafewraer$queryProfileProviders$2.java": "6,5667"
+        }
+    },
+    "domains": {
+        "github.com": {
+            "bad": "no",
+            "geolocation": {
+                "ip": "20.205.243.166",
+                "country_short": "US",
+                "country_long": "United States of America",
+                "region": "Washington",
+                "city": "Redmond",
+                "latitude": "47.682899",
+                "longitude": "-122.120903"
+            },
+            "ofac": false
         }
     },
     "secrets": [

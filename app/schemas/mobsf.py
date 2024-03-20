@@ -92,6 +92,21 @@ class CodeAnalysis(BaseModel):
     findings: dict[str, CodeAnalysisFinding]
 
 
+class Geolocation(BaseModel):
+    ip: str
+    country_short: str
+    country_long: str
+    region: str
+    city: str
+    latitude: str
+    longitude: str
+
+
+class Domain(BaseModel):
+    bad: str
+    geolocation: Geolocation | None
+
+
 class ScanResponse(BaseModel):
     file_name: str
     app_name: str
@@ -114,6 +129,7 @@ class ScanResponse(BaseModel):
     network_security: NetworkSecurity
     binary_analysis: list[BinaryAnalysis]
     code_analysis: CodeAnalysis
+    domains: dict[str, Domain]
     secrets: list[str]
 
 

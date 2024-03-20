@@ -280,6 +280,30 @@ class CodeResult(ResultBase):
         )
 
 
+class Geolocation(BaseModel):
+    ip: str
+    country_short: str
+    country_long: str
+    region: str
+    city: str
+    latitude: str
+    longitude: str
+
+
+class Domain(BaseModel):
+    name: str
+    bad: str
+    geolocation: Geolocation | None
+
+    @staticmethod
+    def from_mobsf(domain_name: str, domain: mobsf.Domain):
+        return Domain(
+            name=domain_name,
+            bad=domain.bad,
+            geolocation=Geolocation.model_validate(domain.geolocation.model_dump()) if domain.geolocation != None else None,
+        )
+
+
 class SecretResult(ResultBase):
     possible_secrets: list[str]
 
@@ -303,6 +327,7 @@ class StaticScanResult(BaseModel):
     network_results: list[NetworkResult]
     binary_results: list[BinaryResults]
     code_results: list[CodeResult]
+    domains: list[Domain]
     secrets_results: SecretResult | None = Field(None)
 
     @staticmethod
@@ -329,6 +354,9 @@ class StaticScanResult(BaseModel):
             code_results=[
                 CodeResult.from_mobsf(name, result)
                 for name, result in resp.code_analysis.findings.items()
+            ],
+            domains=[
+                Domain.from_mobsf(name, domain) for name, domain in resp.domains.items()
             ],
             secrets_results=(
                 SecretResult.from_mobsf(resp.secrets)
