@@ -12,6 +12,9 @@ class Settings(BaseSettings):
 
     sqlite_url: AnyUrl
 
+    baidu_translate_ak: str
+    baidu_translate_sk: str
+
     model_config = SettingsConfigDict(env_file=".env")
 
 

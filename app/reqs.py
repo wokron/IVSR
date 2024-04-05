@@ -81,3 +81,42 @@ async def mobsf_download_source_file(
         )
 
     return DownloadSourceResponse.model_validate_json(resp.content)
+
+
+def baidu_translate(ak: str, sk: str, from_lang: str, to_lang: str, content: str):
+
+    def get_access_token():
+        url = "https://aip.baidubce.com/oauth/2.0/token"
+        params = {
+            "grant_type": "client_credentials",
+            "client_id": ak,
+            "client_secret": sk,
+        }
+        return str(httpx.post(url, params=params).json().get("access_token"))
+
+    url = (
+        "https://aip.baidubce.com/rpc/2.0/mt/texttrans/v1?access_token="
+        + get_access_token()
+    )
+
+    result = []
+    for line in content.split("\n"):
+        if len(line) == 0:
+            result.append("")
+            continue
+        response = httpx.post(
+            url,
+            headers={
+                "Content-Type": "application/json",
+                "Accept": "application/json",
+            },
+            json={
+                "from": from_lang,
+                "to": to_lang,
+                "q": line,
+            },
+        )
+
+        result.append(response.json()["result"]["trans_result"][0]["dst"])
+
+    return "\n".join(result)

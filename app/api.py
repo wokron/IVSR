@@ -17,6 +17,7 @@ from xmalplus import XmalPlus
 from app.db.models import AndroidApp, AndroidAppCreate, AndroidAppRead, AndroidAppUpdate
 
 from app.reqs import (
+    baidu_translate,
     mobsf_download_file,
     mobsf_download_source_file,
     mobsf_upload_apk,
@@ -130,9 +131,10 @@ async def scan_apk_file_ml(
         return json.loads(app.ml_result)
 
 
-@router.get("/report", response_model=TextFile)
+@router.get("/report", response_model=tuple[TextFile, TextFile])
 async def generate_report(
     *,
+    settings: Annotated[Settings, Depends(get_settings)],
     sess: Annotated[Session, Depends(get_session)],
     chain: Annotated[Any, Depends(create_chain)],
     app: Annotated[AndroidApp, Depends(get_android_app_by_hash)],
@@ -146,7 +148,18 @@ async def generate_report(
             StaticScanResultSimple.model_validate_json(static_result).model_dump(),
             ml_result,
         )
-        update_android_app(sess, app.hash, AndroidAppUpdate(llm_report=report))
-        return TextFile(file="Report.md", data=report, type="md")
+        report_zh = baidu_translate(
+            settings.baidu_translate_ak, settings.baidu_translate_sk, "en", "zh", report
+        )
+        update_android_app(
+            sess, app.hash, AndroidAppUpdate(llm_report=report, llm_report_zh=report_zh)
+        )
+        return [
+            TextFile(file="Report.md", data=report, type="md"),
+            TextFile(file="报告.md", data=report_zh, type="md"),
+        ]
     else:
-        return TextFile(file="Report.md", data=app.llm_report, type="md")
+        return [
+            TextFile(file="Report.md", data=app.llm_report, type="md"),
+            TextFile(file="报告.md", data=app.llm_report_zh, type="md"),
+        ]

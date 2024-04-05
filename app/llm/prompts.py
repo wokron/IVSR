@@ -59,7 +59,7 @@ The report should have these sections:
 4. recommendations
 
 For example, the format of your report could by like this:
-ANALYSIS REPORT: YOUR APP NAME
+SECURITY ANALYSIS REPORT
 ==============================
 
 Introduction
@@ -68,7 +68,7 @@ The following analysis...
 
 Part1: XXX
 ----------
-The XXX apk requests ..., include
+The apk requests ..., include
 1. ...
 2. ...
 
